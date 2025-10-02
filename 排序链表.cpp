@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 
+// 链表节点定义
 struct ListNode {
     int val;
     ListNode *next;
@@ -8,7 +9,7 @@ struct ListNode {
     ListNode(int x) : val(x), next(nullptr) {}
     ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
- 
+
 class Solution {
 public:
     int getListLength(ListNode *head) {
@@ -20,112 +21,77 @@ public:
         }
         return n;
     }
-    ListNode *splitList(ListNode *head,int size) {
+
+    ListNode *splitList(ListNode *head, int size) {
         ListNode *cur = head;
-        for (int i = 0;i < size - 1 && cur != nullptr;i++) {
+        for (int i = 0; i < size - 1 && cur; i++) {
             cur = cur->next;
         }
-
-        if (cur == nullptr || cur->next == nullptr) {
+        if (!cur) {
             return nullptr;
         }
-
-        ListNode * next_head = cur->next;
+        ListNode *next_list_head = cur->next;
         cur->next = nullptr;
-        return next_head;
+        return next_list_head;
     }
 
-    pair<ListNode *,ListNode *> mergeTwoLists(ListNode *list1,ListNode *list2) {
-        ListNode dummy;
+    pair<ListNode *, ListNode *> mergeList(ListNode *list1, ListNode *list2) {
+        ListNode dummy(0);
         ListNode *cur = &dummy;
         while (list1 && list2) {
             if (list1->val < list2->val) {
                 cur->next = list1;
                 list1 = list1->next;
-            }else{
+            } else {
                 cur->next = list2;
                 list2 = list2->next;
             }
             cur = cur->next;
         }
         cur->next = list1 ? list1 : list2;
-        while (cur && cur->next) {
+        while (cur->next) {
             cur = cur->next;
         }
-        return {dummy.next,cur};
+        return {dummy.next, cur};
     }
 
-
     ListNode* sortList(ListNode* head) {
+        if (!head || !head->next) {
+            return head;
+        }
+
         int length = getListLength(head);
-        ListNode dummy(0,head);
-        for (int step = 1;step < length;step *= 2) {
-            ListNode *new_list_tail = &dummy;
+        ListNode dummy(0);
+        dummy.next = head;
+
+        for (int size = 1; size < length; size *= 2) {
+            ListNode *prev = &dummy;
             ListNode *cur = dummy.next;
             while (cur) {
                 ListNode *head1 = cur;
-                ListNode *head2 = splitList(head1,step);
-                cur = splitList(head2,step);
-                auto [head,tail] = mergeTwoLists(head1,head2);
-                new_list_tail->next = head;
-                new_list_tail = tail;
+                ListNode *head2 = splitList(head1, size);
+                cur = splitList(head2, size);
+                
+                auto [mergedHead, mergedTail] = mergeList(head1, head2);
+                prev->next = mergedHead;
+                prev = mergedTail;
             }
         }
         return dummy.next;
     }
 };
 
-// 辅助函数：创建链表
-ListNode* createList(int arr[], int n) {
-    if (n == 0) return nullptr;
-    ListNode *head = new ListNode(arr[0]);
-    ListNode *cur = head;
-    for (int i = 1; i < n; i++) {
-        cur->next = new ListNode(arr[i]);
-        cur = cur->next;
+int main () {
+    ListNode *head = new ListNode (4);
+    head->next = new ListNode(2);
+    head->next->next = new ListNode(1);
+    head->next->next->next = new ListNode(3);
+    Solution sl;
+    ListNode *result = sl.sortList(head);
+    while (result) {
+        cout << result->val << " ";
+        result = result->next;
     }
-    return head;
-}
-
-// 辅助函数：打印链表
-void printList(ListNode *head) {
-    ListNode *cur = head;
-    while (cur) {
-        cout << cur->val << " -> ";
-        cur = cur->next;
-    }
-    cout << "nullptr" << endl;
-}
-
-// 辅助函数：释放链表内存
-void freeList(ListNode *head) {
-    ListNode *cur = head;
-    while (cur) {
-        ListNode *temp = cur;
-        cur = cur->next;
-        delete temp;
-    }
-}
-
-int main() {
-    // 测试用例：创建一个未排序的链表
-    int arr[] = {4, 2, 1, 3, 5, 9, 7, 8, 6};
-    int n = sizeof(arr) / sizeof(arr[0]);
-    
-    ListNode *head = createList(arr, n);
-    
-    cout << "排序前的链表：" << endl;
-    printList(head);
-    
-    // 进行排序
-    Solution solution;
-    ListNode *sortedHead = solution.sortList(head);
-    
-    cout << "排序后的链表：" << endl;
-    printList(sortedHead);
-    
-    // 释放内存
-    freeList(sortedHead);
-    
     return 0;
 }
+    
